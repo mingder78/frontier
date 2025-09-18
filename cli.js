@@ -1,12 +1,41 @@
 #!/usr/bin/env node
 
 import minimist from 'minimist'
+import { createLibp2p } from 'libp2p'
+import { tcp } from '@libp2p/tcp'
+import { webSockets } from '@libp2p/websockets'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { circuitRelayServer } from '@libp2p/circuit-relay-v2'
+import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { identify } from '@libp2p/identify'
-import { webSockets } from '@libp2p/websockets'
-import { createLibp2p } from 'libp2p'
+
+async function main() {
+  const node = await createLibp2p({
+    addresses: {
+      listen: ['/ip4/0.0.0.0/tcp/15003/ws']
+    },
+    transports: [
+      tcp(),
+      webSockets()
+    ],
+    connectionEncryption: [noise()],
+    streamMuxers: [yamux()],
+    services: {
+      relay: circuitRelayServer({ advertise: true }),
+      pubsub: gossipsub(),
+      identify: identify(),
+    }
+  })
+
+  await node.start()
+  console.log('🚀 Relay node running')
+
+  console.log(`🌈 Node started with id ${node.peerId.toString()}`)
+  console.log('Listening on:')
+  node.getMultiaddrs().forEach((ma) => console.log(ma.toString()))
+  console.log('👉 ... press control-c to stop.')
+}
 
 // Define minimist options
 const argv = minimist(process.argv.slice(2), {
@@ -73,32 +102,6 @@ if (verbose) {
 console.log(`Hello, My Treehole! Running in ${mode} mode.`);
 main()
 
-async function main() {
-const node = await createLibp2p({
-  addresses: {
-    listen: ['/ip4/0.0.0.0/tcp/0/ws']
-    // TODO check "What is next?" section
-  },
-  transports: [
-    webSockets()
-  ],
-  connectionEncrypters: [
-    noise()
-  ],
-  streamMuxers: [
-    yamux()
-  ],
-  services: {
-    identify: identify(),
-    relay: circuitRelayServer()
-  }
-})
-
-console.log(`🚀🔭🛰📡🌈 Node started with id ${node.peerId.toString()}`)
-console.log('Listening on:')
-node.getMultiaddrs().forEach((ma) => console.log(ma.toString()))
-console.log('👉 ... press control-c to stop.')
-}
 
 if (argv["--"].length > 0) {
   console.log("Extra args after --:", argv["--"]);
