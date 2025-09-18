@@ -21,7 +21,8 @@
     "@libp2p/websockets": "^9.2.19",
     "@libp2p/webtransport": "^5.0.51",
     "install": "^0.13.0",
-    "libp2p": "^2.10.0"
+    "libp2p": "^2.10.0",
+    "multiformats": "^13.4.1"
   },
   "devDependencies": {
     "@types/bun": "latest"
