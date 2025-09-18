@@ -1,6 +1,6 @@
 {
   "name": "frontier",
-  "description": "libp2p relay server template',
+  "description": "libp2p relay server template",
   "private": true,
   "version": "0.1.0",
   "license": "Apache-2.0 OR MIT",
