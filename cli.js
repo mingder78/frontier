@@ -2,39 +2,65 @@
 
 import minimist from 'minimist'
 import { createLibp2p } from 'libp2p'
-import { tcp } from '@libp2p/tcp'
 import { webSockets } from '@libp2p/websockets'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { circuitRelayServer } from '@libp2p/circuit-relay-v2'
-import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { identify } from '@libp2p/identify'
+import { gossipsub } from '@chainsafe/libp2p-gossipsub'
+
+const AUDIO_PROTOCOL = '/webrtc-audio/1.0.0'
 
 async function main() {
   const node = await createLibp2p({
     addresses: {
-      listen: ['/ip4/0.0.0.0/tcp/15003/ws']
+      listen: ['/ip4/127.0.0.1/tcp/0/ws']
+      // TODO check "What is next?" section
     },
     transports: [
-      tcp(),
       webSockets()
     ],
-    connectionEncryption: [noise()],
-    streamMuxers: [yamux()],
-    services: {
-      relay: circuitRelayServer({ advertise: true }),
-      pubsub: gossipsub(),
+    connectionEncrypters: [
+      noise()
+    ],
+    streamMuxers: [
+      yamux()
+    ],
+services: {
       identify: identify(),
+      relay: circuitRelayServer({
+        reservations: {  // Configures reservation limits (default: unlimited for testing)
+          maxReservations: 50,
+          maxReservationsPerPeer: 10,  // Limits reservations per peer
+          reservationDuration: 300000,
+          reservationTTL: 600000
+        },
+        connections: {  // Limits relayed connections
+          maxIncoming: 100,
+          maxOutgoing: 100,
+          maxPerPeer: 5
+        },
+        // ACL: undefined  // No ACL = accepts reservations from any peer (key for "true" reservations)
+        // For production: ACL: { allow: ['QmSpecificPeerID'] } to restrict
+        metrics: { enabled: true }  // Optional: Enable Prometheus metrics
+      })
     }
   })
 
-  await node.start()
-  console.log('🚀 Relay node running')
-
-  console.log(`🌈 Node started with id ${node.peerId.toString()}`)
-  console.log('Listening on:')
+  console.log(`🚀🔭🛰📡 Node started with id ${node.peerId.toString()}`)
+  console.log('Listening on: 🌈')
   node.getMultiaddrs().forEach((ma) => console.log(ma.toString()))
-  console.log('👉 ... press control-c to stop.')
+
+  node.handle(AUDIO_PROTOCOL, async ({ stream, connection }) => {
+    console.log('📩 signaling message from', connection.remotePeer.toString())
+    const decoder = new TextDecoder()
+    const reader = stream.getReader()
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      console.log('message:', decoder.decode(value))
+    }
+  })
 }
 
 // Define minimist options
@@ -100,7 +126,9 @@ if (verbose) {
 }
 
 console.log(`Hello, My Treehole! Running in ${mode} mode.`);
-main()
+main().catch(err => {
+  console.error('Fatal relay error:', err)
+})
 
 
 if (argv["--"].length > 0) {
