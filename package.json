@@ -1,5 +1,5 @@
 {
-  "name": "frontier",
+  "name": "libp2p-audio-frontier",
   "description": "libp2p relay server template",
   "private": true,
   "version": "0.3.0",
