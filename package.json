@@ -2,7 +2,7 @@
   "name": "libp2p-audio-frontier",
   "description": "libp2p relay server template",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "Apache-2.0 OR MIT",
   "module": "index.ts",
   "type": "module",
