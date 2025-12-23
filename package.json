@@ -1,13 +1,13 @@
 {
-  "name": "libp2p-relay1",
+  "name": "libp2p-examples",
   "description": "libp2p relay server template",
   "private": true,
-  "version": "0.3.2",
+  "version": "0.4.0",
   "license": "Apache-2.0 OR MIT",
-  "module": "index.ts",
+  "module": "cli.ts",
   "type": "module",
   "bin": {
-    "treehole": "./cli.js"
+    "treehole": "./cli.ts"
   },
   "scripts": {
     "dev": "DEBUG='*' bun run cli.ts",
